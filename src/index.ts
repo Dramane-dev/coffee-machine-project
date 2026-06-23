@@ -22,7 +22,12 @@ export type CustomerOrder = {
 export class CustomerOrderToDrinkMakerTranslator {
   private constructor() {}
 
-  static translate(order: CustomerOrder) {
-    return '';
+  static translate(order: CustomerOrder): string {
+    const drinkTypeSegment = DRINK_TYPE_PROTOCOL_MAPPER[order.drinkType];
+    const shouldAddStick = order.sugar > 0;
+    const sugarSegment = shouldAddStick ? order.sugar.toString() : '';
+    const stickSegment = shouldAddStick ? '0' : '';
+
+    return [drinkTypeSegment, sugarSegment, stickSegment].join(':');
   }
 }
