@@ -2,6 +2,7 @@ export const DRINK_TYPE = {
   tea: 'tea',
   chocolate: 'chocolate',
   coffee: 'coffee',
+  orange: 'orange juice',
 } as const;
 
 export const MESSAGE = 'message';
@@ -10,6 +11,7 @@ export const DRINK_TYPE_PROTOCOL_MAPPER = {
   [DRINK_TYPE.tea]: 'T',
   [DRINK_TYPE.chocolate]: 'H',
   [DRINK_TYPE.coffee]: 'C',
+  [DRINK_TYPE.orange]: 'O',
   [MESSAGE]: 'M',
 } as const;
 
@@ -19,6 +21,7 @@ export const DRINK_AMOUNT_MAPPER = {
   [DRINK_TYPE.tea]: 40,
   [DRINK_TYPE.chocolate]: 50,
   [DRINK_TYPE.coffee]: 60,
+  [DRINK_TYPE.orange]: 60,
 } as const;
 
 export type DrinkAmount = (typeof DRINK_AMOUNT_MAPPER)[keyof typeof DRINK_AMOUNT_MAPPER];
@@ -28,6 +31,7 @@ export type SugarCount = 0 | 1 | 2;
 export type CustomerOrder = {
   drinkType: DrinkType;
   sugar: SugarCount;
+  isExtraHot: boolean;
 };
 
 export class CustomerOrderToDrinkMakerTranslator {
@@ -72,11 +76,12 @@ export class CustomerOrderToDrinkMakerTranslator {
 
   static translate(order: CustomerOrder): string {
     const drinkTypeSegment = DRINK_TYPE_PROTOCOL_MAPPER[order.drinkType];
+    const extraHotSegmet = order.isExtraHot ? 'h' : '';
     const shouldAddStick = order.sugar > 0;
     const sugarSegment = shouldAddStick ? order.sugar.toString() : '';
     const stickSegment = shouldAddStick ? '0' : '';
 
-    return [drinkTypeSegment, sugarSegment, stickSegment].join(':');
+    return [`${drinkTypeSegment}${extraHotSegmet}`, sugarSegment, stickSegment].join(':');
   }
 
   static computeMissingAmount({
