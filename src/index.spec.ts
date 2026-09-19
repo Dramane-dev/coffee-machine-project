@@ -21,6 +21,7 @@ describe('CustomerOrderToDrinkMakerTranslator', () => {
         order: {
           drinkType: DRINK_TYPE.tea,
           sugar: 0,
+          isExtraHot: false,
         },
         insertedAmount: 40,
         expected: 'T::',
@@ -29,6 +30,7 @@ describe('CustomerOrderToDrinkMakerTranslator', () => {
         order: {
           drinkType: DRINK_TYPE.chocolate,
           sugar: 0,
+          isExtraHot: false,
         },
         insertedAmount: 50,
         expected: 'H::',
@@ -37,14 +39,59 @@ describe('CustomerOrderToDrinkMakerTranslator', () => {
         order: {
           drinkType: DRINK_TYPE.coffee,
           sugar: 0,
+          isExtraHot: false,
         },
         insertedAmount: 60,
         expected: 'C::',
       },
+      {
+        order: {
+          drinkType: DRINK_TYPE.orange,
+          sugar: 0,
+          isExtraHot: false,
+        },
+        insertedAmount: 60,
+        expected: 'O::',
+      },
+      {
+        order: {
+          drinkType: DRINK_TYPE.tea,
+          sugar: 0,
+          isExtraHot: true,
+        },
+        insertedAmount: 40,
+        expected: 'Th::',
+      },
+      {
+        order: {
+          drinkType: DRINK_TYPE.chocolate,
+          sugar: 0,
+          isExtraHot: true,
+        },
+        insertedAmount: 50,
+        expected: 'Hh::',
+      },
+      {
+        order: {
+          drinkType: DRINK_TYPE.coffee,
+          sugar: 0,
+          isExtraHot: true,
+        },
+        insertedAmount: 60,
+        expected: 'Ch::',
+      },
+      {
+        order: {
+          drinkType: DRINK_TYPE.orange,
+          sugar: 0,
+          isExtraHot: true,
+        },
+        insertedAmount: 60,
+        expected: 'Oh::',
+      },
     ])(
-      'should handle customer order when drinkType is $order.drinkType',
+      'should handle customer order when drinkType is $order.drinkType and isExtraHot equals to $order.isExtraHot',
       ({ order, insertedAmount, expected }) => {
-        // GIVEN
         // WHEN
         const result = CustomerOrderToDrinkMakerTranslator.handleCustomerOrder({
           order,
@@ -60,6 +107,7 @@ describe('CustomerOrderToDrinkMakerTranslator', () => {
       const order: CustomerOrder = {
         drinkType: DRINK_TYPE.tea,
         sugar: 0,
+        isExtraHot: false,
       };
       const insertedAmount = 10;
 
@@ -80,8 +128,8 @@ describe('CustomerOrderToDrinkMakerTranslator', () => {
       { drinkType: DRINK_TYPE.tea, expected: 40 },
       { drinkType: DRINK_TYPE.chocolate, expected: 50 },
       { drinkType: DRINK_TYPE.coffee, expected: 60 },
+      { drinkType: DRINK_TYPE.orange, expected: 60 },
     ])('should get $drinkType amount in cents', ({ drinkType, expected }) => {
-      // GIVEN
       // WHEN
       const result = CustomerOrderToDrinkMakerTranslator.getDrinkAmountInCents(drinkType);
 
@@ -126,7 +174,7 @@ describe('CustomerOrderToDrinkMakerTranslator', () => {
         description:
           'should return true even when given inserted amount is greater than chocolate price',
         drinkAmount: DRINK_AMOUNT_MAPPER[DRINK_TYPE.chocolate],
-        insertedAmount: 60,
+        insertedAmount: 70,
         expected: true,
       },
       {
@@ -138,6 +186,27 @@ describe('CustomerOrderToDrinkMakerTranslator', () => {
       {
         description: 'should return true when given inserted amount is equals to coffee price',
         drinkAmount: DRINK_AMOUNT_MAPPER[DRINK_TYPE.coffee],
+        insertedAmount: 60,
+        expected: true,
+      },
+      {
+        description:
+          'should return true even when given inserted amount is greater than orange juice price',
+        drinkAmount: DRINK_AMOUNT_MAPPER[DRINK_TYPE.orange],
+        insertedAmount: 70,
+        expected: true,
+      },
+      {
+        description:
+          'should return false when given inserted amount is insufficient for orange juice',
+        drinkAmount: DRINK_AMOUNT_MAPPER[DRINK_TYPE.orange],
+        insertedAmount: 10,
+        expected: false,
+      },
+      {
+        description:
+          'should return true when given inserted amount is equals to orange juice price',
+        drinkAmount: DRINK_AMOUNT_MAPPER[DRINK_TYPE.orange],
         insertedAmount: 60,
         expected: true,
       },
@@ -155,7 +224,6 @@ describe('CustomerOrderToDrinkMakerTranslator', () => {
         expected: false,
       },
     ])('$description', ({ drinkAmount, insertedAmount, expected }) => {
-      // GIVEN
       // WHEN
       const result = CustomerOrderToDrinkMakerTranslator.validateInsertedAmount({
         drinkAmount,
@@ -193,21 +261,52 @@ describe('CustomerOrderToDrinkMakerTranslator', () => {
     });
   });
   describe('translate', () => {
-    type TranslateTestCase = CustomerOrder & { expected: string };
+    type TranslateTestCase = { description: string; order: CustomerOrder; expected: string };
 
     it.each<TranslateTestCase>([
-      { drinkType: DRINK_TYPE.tea, sugar: 0, expected: 'T::' },
-      { drinkType: DRINK_TYPE.chocolate, sugar: 0, expected: 'H::' },
-      { drinkType: DRINK_TYPE.coffee, sugar: 0, expected: 'C::' },
+      {
+        description: 'should return "T::" when a customer orders a tea',
+        order: { drinkType: DRINK_TYPE.tea, isExtraHot: false, sugar: 0 },
+        expected: 'T::',
+      },
+      {
+        description: 'should return "H::" when a customer orders a chocolate',
+        order: { drinkType: DRINK_TYPE.chocolate, isExtraHot: false, sugar: 0 },
+        expected: 'H::',
+      },
+      {
+        description: 'should return "C::" when a customer orders a coffee',
+        order: { drinkType: DRINK_TYPE.coffee, isExtraHot: false, sugar: 0 },
+        expected: 'C::',
+      },
+      {
+        description: 'should return "O::" when a customer orders an orange',
+        order: { drinkType: DRINK_TYPE.orange, isExtraHot: false, sugar: 0 },
+        expected: 'O::',
+      },
+      {
+        description: 'should return "Th::" when a customer orders an extra hot tea',
+        order: { drinkType: DRINK_TYPE.tea, isExtraHot: true, sugar: 0 },
+        expected: 'Th::',
+      },
+      {
+        description: 'should return "Hh::" when a customer orders an extra hot chocolate',
+        order: { drinkType: DRINK_TYPE.chocolate, isExtraHot: true, sugar: 0 },
+        expected: 'Hh::',
+      },
+      {
+        description: 'should return "Ch::" when a customer orders an extra hot coffee',
+        order: { drinkType: DRINK_TYPE.coffee, isExtraHot: true, sugar: 0 },
+        expected: 'Ch::',
+      },
+      {
+        description: 'should return "Oh::" when a customer orders an extra hot orange',
+        order: { drinkType: DRINK_TYPE.orange, isExtraHot: true, sugar: 0 },
+        expected: 'Oh::',
+      },
     ])(
-      'should translate customer order when drinkType is $drinkType',
-      ({ drinkType, sugar, expected }) => {
-        // GIVEN
-        const order: CustomerOrder = {
-          drinkType,
-          sugar,
-        };
-
+      'should translate customer order when drinkType is $order.drinkType and isExtraHot equals to $order.isExtraHot',
+      ({ order, expected }) => {
         // WHEN
         const result = CustomerOrderToDrinkMakerTranslator.translate(order);
 
@@ -216,19 +315,95 @@ describe('CustomerOrderToDrinkMakerTranslator', () => {
       },
     );
     it.each<TranslateTestCase>([
-      { drinkType: DRINK_TYPE.tea, sugar: 1, expected: 'T:1:0' },
-      { drinkType: DRINK_TYPE.chocolate, sugar: 1, expected: 'H:1:0' },
-      { drinkType: DRINK_TYPE.coffee, sugar: 1, expected: 'C:1:0' },
-      { drinkType: DRINK_TYPE.tea, sugar: 2, expected: 'T:2:0' },
-      { drinkType: DRINK_TYPE.chocolate, sugar: 2, expected: 'H:2:0' },
-      { drinkType: DRINK_TYPE.coffee, sugar: 2, expected: 'C:2:0' },
-    ])('should add a stick when order contains sugar: $sugar', ({ drinkType, sugar, expected }) => {
-      // GIVEN
-      const order: CustomerOrder = {
-        drinkType,
-        sugar,
-      };
-
+      {
+        description: 'should return "T:1:0" when a customer orders a tea with one sugar',
+        order: { drinkType: DRINK_TYPE.tea, sugar: 1, isExtraHot: false },
+        expected: 'T:1:0',
+      },
+      {
+        description: 'should return "H:1:0" when a customer orders a chocolate with one sugar',
+        order: { drinkType: DRINK_TYPE.chocolate, sugar: 1, isExtraHot: false },
+        expected: 'H:1:0',
+      },
+      {
+        description: 'should return "C:1:0" when a customer orders a coffee with one sugar',
+        order: { drinkType: DRINK_TYPE.coffee, sugar: 1, isExtraHot: false },
+        expected: 'C:1:0',
+      },
+      {
+        description: 'should return "O:1:0" when a customer orders an orange with one sugar',
+        order: { drinkType: DRINK_TYPE.orange, sugar: 1, isExtraHot: false },
+        expected: 'O:1:0',
+      },
+      {
+        description: 'should return "T:2:0" when a customer orders a tea with two sugars',
+        order: { drinkType: DRINK_TYPE.tea, sugar: 2, isExtraHot: false },
+        expected: 'T:2:0',
+      },
+      {
+        description: 'should return "H:2:0" when a customer orders a chocolate with two sugars',
+        order: { drinkType: DRINK_TYPE.chocolate, sugar: 2, isExtraHot: false },
+        expected: 'H:2:0',
+      },
+      {
+        description: 'should return "C:2:0" when a customer orders a coffee with two sugars',
+        order: { drinkType: DRINK_TYPE.coffee, sugar: 2, isExtraHot: false },
+        expected: 'C:2:0',
+      },
+      {
+        description: 'should return "O:2:0" when a customer orders an orange with two sugars',
+        order: { drinkType: DRINK_TYPE.orange, sugar: 2, isExtraHot: false },
+        expected: 'O:2:0',
+      },
+      {
+        description:
+          'should return "Th:1:0" when a customer orders an extra hot tea with one sugar',
+        order: { drinkType: DRINK_TYPE.tea, sugar: 1, isExtraHot: true },
+        expected: 'Th:1:0',
+      },
+      {
+        description:
+          'should return "Hh:1:0" when a customer orders an extra hot chocolate with one sugar',
+        order: { drinkType: DRINK_TYPE.chocolate, sugar: 1, isExtraHot: true },
+        expected: 'Hh:1:0',
+      },
+      {
+        description:
+          'should return "Ch:1:0" when a customer orders an extra hot coffee with one sugar',
+        order: { drinkType: DRINK_TYPE.coffee, sugar: 1, isExtraHot: true },
+        expected: 'Ch:1:0',
+      },
+      {
+        description:
+          'should return "Oh:1:0" when a customer orders an extra hot orange with one sugar',
+        order: { drinkType: DRINK_TYPE.orange, sugar: 1, isExtraHot: true },
+        expected: 'Oh:1:0',
+      },
+      {
+        description:
+          'should return "Th:2:0" when a customer orders an extra hot tea with two sugars',
+        order: { drinkType: DRINK_TYPE.tea, sugar: 2, isExtraHot: true },
+        expected: 'Th:2:0',
+      },
+      {
+        description:
+          'should return "Hh:2:0" when a customer orders an extra hot chocolate with two sugars',
+        order: { drinkType: DRINK_TYPE.chocolate, sugar: 2, isExtraHot: true },
+        expected: 'Hh:2:0',
+      },
+      {
+        description:
+          'should return "Ch:2:0" when a customer orders an extra hot coffee with two sugars',
+        order: { drinkType: DRINK_TYPE.coffee, sugar: 2, isExtraHot: true },
+        expected: 'Ch:2:0',
+      },
+      {
+        description:
+          'should return "Oh:2:0" when a customer orders an extra hot orange with two sugars',
+        order: { drinkType: DRINK_TYPE.orange, sugar: 2, isExtraHot: true },
+        expected: 'Oh:2:0',
+      },
+    ])('$description', ({ order, expected }) => {
       // WHEN
       const result = CustomerOrderToDrinkMakerTranslator.translate(order);
 
